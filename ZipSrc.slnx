@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/README/">
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="ZipSrc.Test/ZipSrc.Test.csproj" />
+  <Project Path="ZipSrc/ZipSrc.csproj" />
+</Solution>
