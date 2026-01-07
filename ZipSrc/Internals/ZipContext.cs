@@ -1,6 +1,6 @@
 using System.IO.Compression;
 
-namespace Toolbelt.ZipSrc;
+namespace Toolbelt.ZipSrc.Internals;
 
 /// <summary>
 /// Represents the context for a zip archive operation, containing the archive, compression settings, and target directory.
