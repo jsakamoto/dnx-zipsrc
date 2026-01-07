@@ -2,6 +2,8 @@
   <Folder Name="/README/">
     <File Path="LICENSE" />
     <File Path="README.md" />
+    <File Path="RELEASE-NOTES.txt" />
+    <File Path="THIRD-PARTY-NOTICES.txt" />
   </Folder>
   <Project Path="ZipSrc.Test/ZipSrc.Test.csproj" />
   <Project Path="ZipSrc/ZipSrc.csproj" />
