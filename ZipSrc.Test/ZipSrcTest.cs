@@ -1,7 +1,9 @@
+using System.IO.Compression;
 using Toolbelt.ZipSrc.Test.Internals;
 
 namespace Toolbelt.ZipSrc.Test;
 
+[Parallelizable(ParallelScope.Children)]
 public class ZipSrcTest
 {
     /* 
@@ -13,18 +15,21 @@ public class ZipSrcTest
     | .gitignore    | (none)      |
     */
     [Test]
-    public void ZipSrc_Case001_Test()
+    public async Task ZipSrc_Case001_TestAsync()
     {
         // Given
         using var workSpace = WorkSpace.Create("Case001");
 
         // When
-        SourceZipper.Zip(workSpace);
+        await SourceZipper.ZipAsync(workSpace);
 
         // Then
-        File.Exists(Path.Combine(workSpace, "MyApp.zip")).IsTrue();
+        var zipPath = Path.Combine(workSpace, "MyApp.zip");
+        File.Exists(zipPath).IsTrue();
 
-        Assert.Inconclusive("Test not implemented.");
+        using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
+        var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
+        entries.Is(Expectations.Case001);
     }
 
     /* 
@@ -36,18 +41,21 @@ public class ZipSrcTest
     | .gitignore    | in subdir      |
     */
     [Test]
-    public void ZipSrc_Case002_Test()
+    public async Task ZipSrc_Case002_TestAsync()
     {
         // Given
         using var workSpace = WorkSpace.Create("Case002");
 
         // When
-        SourceZipper.Zip(workSpace);
+        await SourceZipper.ZipAsync(workSpace);
 
         // Then
-        File.Exists(Path.Combine(workSpace, "WpfApp.zip")).IsTrue();
+        var zipPath = Path.Combine(workSpace, "WpfApp.zip");
+        File.Exists(zipPath).IsTrue();
 
-        Assert.Inconclusive("Test not implemented.");
+        using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
+        var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
+        entries.Is(Expectations.Case002);
     }
 
     /* 
@@ -59,17 +67,47 @@ public class ZipSrcTest
     | .gitignore    | in root    |
     */
     [Test]
-    public void ZipSrc_Case003_Test()
+    public async Task ZipSrc_Case003_TestAsync()
     {
         // Given
         using var workSpace = WorkSpace.Create("Case003");
 
         // When
-        SourceZipper.Zip(workSpace);
+        await SourceZipper.ZipAsync(workSpace);
 
         // Then
-        File.Exists(Path.Combine(workSpace, "Case003.zip")).IsTrue();
+        var zipPath = Path.Combine(workSpace, "Case003.zip");
+        File.Exists(zipPath).IsTrue();
 
-        Assert.Inconclusive("Test not implemented.");
+        using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
+        var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
+        entries.Is(Expectations.Case003);
+    }
+
+    [Test]
+    public async Task ZipSrc_Repeatedly_TestAsync()
+    {
+        // Given
+        using var workSpace = WorkSpace.Create("Case001");
+
+        // When: Execute zipping multiple times
+        await SourceZipper.ZipAsync(workSpace);
+        await SourceZipper.ZipAsync(workSpace);
+        await SourceZipper.ZipAsync(workSpace);
+
+        // Then
+        var zipPathList = new List<string> {
+            Path.Combine(workSpace, "MyApp.zip"),
+            Path.Combine(workSpace, "MyApp (2).zip"),
+            Path.Combine(workSpace, "MyApp (3).zip"),
+        };
+        zipPathList.ForEach(zipPath =>
+        {
+            File.Exists(zipPath).IsTrue();
+
+            using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
+            var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
+            entries.Is(Expectations.Case001);
+        });
     }
 }

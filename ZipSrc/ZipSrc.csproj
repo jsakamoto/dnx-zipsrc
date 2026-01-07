@@ -15,4 +15,10 @@
     <InternalsVisibleTo Include="ZipSrc.Test" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="GitignoreParserNet" Version="0.2.0.15" />
+    <PackageReference Include="Toolbelt.WorkDirectory" Version="1.1.0.1" />
+    <PackageReference Include="XProcess" Version="1.4.1" />
+  </ItemGroup>
+
 </Project>
