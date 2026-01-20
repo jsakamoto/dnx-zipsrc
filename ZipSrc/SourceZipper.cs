@@ -18,7 +18,7 @@ internal class SourceZipper
         targetZipPath = DetermineTargetZipPath(targetDir, targetZipPath);
 
         // Prepare ignore lists
-        var rootIgnoreList = await GetRootIgnoreList(targetDir);
+        var rootIgnoreList = await GetDefaultIgnoreList(targetDir);
 
         // Create zip archive
         using var archive = ZipFile.Open(targetZipPath, ZipArchiveMode.Create);
@@ -28,7 +28,7 @@ internal class SourceZipper
             CompressionLevel = compressionLevel,
             TargetDir = targetDir,
         };
-        ZipFolderRecursively(context, targetDir, new Stack<IgnoreList>([rootIgnoreList]));
+        ZipFolderRecursively(context, targetDir, rootIgnoreList);
     }
 
     /// <summary>
@@ -68,24 +68,20 @@ internal class SourceZipper
     }
 
     /// <summary>
-    /// Creates an <see cref="IgnoreList"/> for the specified directory, using an existing .gitignore file if present or
-    /// generating a default one if not.
+    /// Creates a default <see cref="IgnoreList"/> collection for the specified directory. It returns empty collection when the .gitignore file is present in that folder. Otherwise returns a default one from the "dotnet new gitignore" template.
     /// </summary>
     /// <param name="targetDir">The path to the target directory for which to obtain or generate the .gitignore file. Cannot be null or empty.</param>
-    /// <returns>A task that represents the asynchronous operation. The result contains an <see cref="IgnoreList"/> instance for the specified directory.</returns>
-    private static async ValueTask<IgnoreList> GetRootIgnoreList(string targetDir)
+    /// <returns>A collection of <see cref="IgnoreList"/>.</returns>
+    private static async ValueTask<IEnumerable<IgnoreList>> GetDefaultIgnoreList(string targetDir)
     {
+        // If .gitignore exists in the root directory, then the default ignore lists is empty
         var rootIgnorePath = Path.Combine(targetDir, ".gitignore");
-        if (File.Exists(rootIgnorePath))
-        {
-            return IgnoreList.Create(targetDir, rootIgnorePath);
-        }
-        else
-        {
-            using var workDir = new WorkDirectory(Path.GetTempPath());
-            await XProcess.Start("dotnet", "new gitignore", workDir).WaitForExitAsync();
-            return IgnoreList.Create(targetDir, Path.Combine(workDir, ".gitignore"));
-        }
+        if (File.Exists(rootIgnorePath)) return [];
+
+        // Otherwise, generate a default .gitignore using "dotnet new gitignore"
+        using var workDir = new WorkDirectory(Path.GetTempPath());
+        await XProcess.Start("dotnet", "new gitignore", workDir).WaitForExitAsync();
+        return [IgnoreList.Create(targetDir, Path.Combine(workDir, ".gitignore"))];
     }
 
     /// <summary>
@@ -94,9 +90,20 @@ internal class SourceZipper
     /// </summary>
     /// <param name="context">The ZIP operation context.</param>
     /// <param name="folderPath">The full path of the folder to be zipped, including all nested subdirectories and files.</param>
-    /// <param name="ignoreLists">A stack of ignore lists representing .gitignore rules to be applied when determining which files and folders to exclude from the archive.</param>
-    private static void ZipFolderRecursively(ZipContext context, string folderPath, Stack<IgnoreList> ignoreLists)
+    /// <param name="ignoreLists">A collection of ignore lists representing .gitignore rules to be applied when determining which files and folders to exclude from the archive.</param>
+    private static void ZipFolderRecursively(ZipContext context, string folderPath, IEnumerable<IgnoreList> ignoreLists)
     {
+        // Skip denied or hidden folders
+        var targetFolderState = GetState(ignoreLists, folderPath + "/");
+        if (targetFolderState == IgnoreState.Denied) return;
+        if (targetFolderState != IgnoreState.Accepted && new DirectoryInfo(folderPath).Attributes.HasFlag(FileAttributes.Hidden)) return;
+
+        // Check for .gitignore in the current folder and add it to the ignore lists
+        var gitIgnorePath = Path.Combine(folderPath, ".gitignore");
+        var gitIgnoreExists = File.Exists(gitIgnorePath);
+        if (gitIgnoreExists) ignoreLists = ignoreLists.Prepend(IgnoreList.Create(folderPath, gitIgnorePath));
+
+        // Add files in the current folder
         var files = Directory.GetFiles(folderPath, "*", SearchOption.TopDirectoryOnly);
         foreach (var filePath in files)
         {
@@ -110,32 +117,21 @@ internal class SourceZipper
             context.Archive.CreateEntryFromFile(filePath, entryName, context.CompressionLevel);
         }
 
+        // Recurse into subdirectories
         var subdirs = Directory.GetDirectories(folderPath, "*", SearchOption.TopDirectoryOnly);
         foreach (var subdir in subdirs)
         {
-            if (new DirectoryInfo(subdir).Attributes.HasFlag(FileAttributes.Hidden)) continue;
-
-            var gitIgnorePath = Path.Combine(subdir, ".gitignore");
-            if (File.Exists(gitIgnorePath))
-            {
-                ignoreLists.Push(IgnoreList.Create(subdir, gitIgnorePath));
-                ZipFolderRecursively(context, subdir, ignoreLists);
-                ignoreLists.Pop();
-            }
-            else
-            {
-                ZipFolderRecursively(context, subdir, ignoreLists);
-            }
+            ZipFolderRecursively(context, subdir, ignoreLists);
         }
     }
 
     /// <summary>
     /// Determines whether the specified file path is denied by any of the provided ignore lists.
     /// </summary>
-    /// <param name="ignoreLists">A stack of <see cref="IgnoreList"/> instances to evaluate against the file path. Each list may specify rules for accepting or denying file paths.</param>
+    /// <param name="ignoreLists">A collection of <see cref="IgnoreList"/> instances to evaluate against the file path. Each list may specify rules for accepting or denying file paths.</param>
     /// <param name="filePath">The file path to check for denial against the ignore lists.</param>
     /// <returns>An <see cref="IgnoreState"/> value indicating whether the file path is denied, accepted, or has no explicit state according to the ignore lists.</returns>
-    private static IgnoreState GetState(Stack<IgnoreList> ignoreLists, string filePath)
+    private static IgnoreState GetState(IEnumerable<IgnoreList> ignoreLists, string filePath)
     {
         foreach (var ignore in ignoreLists)
         {
