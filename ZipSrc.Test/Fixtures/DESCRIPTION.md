@@ -5,3 +5,4 @@
 | Package       | Package Ref | package.config | npm        |
 | .gitignore    | (none)      | in subdir      | in root    |
 | .git (hidden) | in root     | in subdir      | in root    |
+| Hidden files  | in root     | in subdir      | in root    |

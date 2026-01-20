@@ -102,6 +102,8 @@ internal class SourceZipper
         {
             if (filePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) continue;
             if (IsIgnored(ignoreLists, filePath)) continue;
+            if (new FileInfo(filePath).Attributes.HasFlag(FileAttributes.Hidden)) continue;
+
             var entryName = Path.GetRelativePath(context.TargetDir, filePath);
             context.Archive.CreateEntryFromFile(filePath, entryName, context.CompressionLevel);
         }
