@@ -29,7 +29,7 @@ public class ZipSrcTest
 
         using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
         var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
-        entries.Is(Expectations.Case001);
+        entries.Is(Expectations.Case001.ToPaths());
     }
 
     /* 
@@ -55,7 +55,7 @@ public class ZipSrcTest
 
         using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
         var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
-        entries.Is(Expectations.Case002);
+        entries.Is(Expectations.Case002.ToPaths());
     }
 
     /* 
@@ -81,7 +81,7 @@ public class ZipSrcTest
 
         using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
         var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
-        entries.Is(Expectations.Case003);
+        entries.Is(Expectations.Case003.ToPaths());
     }
 
     [Test]
@@ -107,7 +107,7 @@ public class ZipSrcTest
 
             using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
             var entries = archive.Entries.Select(e => e.FullName).Select(PathUtil.Normalize).Order();
-            entries.Is(Expectations.Case001);
+            entries.Is(Expectations.Case001.ToPaths());
         });
     }
 }

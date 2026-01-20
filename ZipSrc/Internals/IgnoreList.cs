@@ -18,7 +18,7 @@ internal class IgnoreList
     /// </summary>
     /// <param name="basePath">The base path for resolving relative file paths.</param>
     /// <param name="parser">The gitignore parser instance.</param>
-    private IgnoreList(string basePath, GitignoreParser parser)
+    public IgnoreList(string basePath, GitignoreParser parser)
     {
         this._basePath = basePath;
         this._parser = parser;

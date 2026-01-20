@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using GitignoreParserNet;
 using Toolbelt.Diagnostics;
 using Toolbelt.ZipSrc.Internals;
 
@@ -6,6 +7,8 @@ namespace Toolbelt.ZipSrc;
 
 internal class SourceZipper
 {
+    private static readonly bool IsWindows = OperatingSystem.IsWindows();
+
     /// <summary>
     /// Creates a ZIP archive of the specified directory source code, applying .gitignore rules to exclude files
     /// </summary>
@@ -68,20 +71,33 @@ internal class SourceZipper
     }
 
     /// <summary>
-    /// Creates a default <see cref="IgnoreList"/> collection for the specified directory. It returns empty collection when the .gitignore file is present in that folder. Otherwise returns a default one from the "dotnet new gitignore" template.
+    /// Creates a default collection of <see cref="IgnoreList"/> for the specified directory.
     /// </summary>
-    /// <param name="targetDir">The path to the target directory for which to obtain or generate the .gitignore file. Cannot be null or empty.</param>
+    /// <remarks>
+    /// The first one of the collection that this method returns contains basic ignore rules for common VCS folders and ZIP files.<br/>
+    /// And second one is generated from the gitignore file in the target directory if it exists.<br/>
+    /// If there is no .gitignore file in the target directory, it generates one using the "dotnet new gitignore" command.
+    /// </remarks>
+    /// <param name="targetDir">The path to the target directory for which to obtain the .gitignore file.</param>
     /// <returns>A collection of <see cref="IgnoreList"/>.</returns>
     private static async ValueTask<IEnumerable<IgnoreList>> GetDefaultIgnoreList(string targetDir)
     {
+        var defaultIgnoreParser = new GitignoreParser("""
+            .git/
+            .svn/
+            .hg/
+            *.zip
+            """);
+        var defaultIgnoreList = new IgnoreList(targetDir, defaultIgnoreParser);
+
         // If .gitignore exists in the root directory, then the default ignore lists is empty
         var rootIgnorePath = Path.Combine(targetDir, ".gitignore");
-        if (File.Exists(rootIgnorePath)) return [];
+        if (File.Exists(rootIgnorePath)) return [defaultIgnoreList];
 
         // Otherwise, generate a default .gitignore using "dotnet new gitignore"
         using var workDir = new WorkDirectory(Path.GetTempPath());
         await XProcess.Start("dotnet", "new gitignore", workDir).WaitForExitAsync();
-        return [IgnoreList.Create(targetDir, Path.Combine(workDir, ".gitignore"))];
+        return [defaultIgnoreList, IgnoreList.Create(targetDir, Path.Combine(workDir, ".gitignore"))];
     }
 
     /// <summary>
@@ -96,7 +112,7 @@ internal class SourceZipper
         // Skip denied or hidden folders
         var targetFolderState = GetState(ignoreLists, folderPath + "/");
         if (targetFolderState == IgnoreState.Denied) return;
-        if (targetFolderState != IgnoreState.Accepted && new DirectoryInfo(folderPath).Attributes.HasFlag(FileAttributes.Hidden)) return;
+        if (IsWindows && targetFolderState != IgnoreState.Accepted && new DirectoryInfo(folderPath).Attributes.HasFlag(FileAttributes.Hidden)) return;
 
         // Check for .gitignore in the current folder and add it to the ignore lists
         var gitIgnorePath = Path.Combine(folderPath, ".gitignore");
@@ -107,11 +123,9 @@ internal class SourceZipper
         var files = Directory.GetFiles(folderPath, "*", SearchOption.TopDirectoryOnly);
         foreach (var filePath in files)
         {
-            if (filePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) continue;
-
             var ignireState = GetState(ignoreLists, filePath);
             if (ignireState == IgnoreState.Denied) continue;
-            if (ignireState != IgnoreState.Accepted && new FileInfo(filePath).Attributes.HasFlag(FileAttributes.Hidden)) continue;
+            if (IsWindows && ignireState != IgnoreState.Accepted && new FileInfo(filePath).Attributes.HasFlag(FileAttributes.Hidden)) continue;
 
             var entryName = Path.GetRelativePath(context.TargetDir, filePath);
             context.Archive.CreateEntryFromFile(filePath, entryName, context.CompressionLevel);
