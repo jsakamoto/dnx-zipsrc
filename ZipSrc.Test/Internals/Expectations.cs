@@ -40,6 +40,7 @@ internal class Expectations
         "package.json",
         "public/favicon.png",
         "public/index.html",
+        "shell.ini",
         "src/index.css",
         "src/index.ts",
     ];

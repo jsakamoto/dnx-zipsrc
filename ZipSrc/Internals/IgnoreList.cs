@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using GitignoreParserNet;
 
 namespace Toolbelt.ZipSrc.Internals;
@@ -34,6 +36,9 @@ internal class IgnoreList
         return new IgnoreList(basePath, parser);
     }
 
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "Negatives")]
+    extern public static ref (Regex Merged, Regex[] Individual) GetNegatives(GitignoreParser parser);
+
     /// <summary>
     /// Gets the ignore state for the specified file path.
     /// </summary>
@@ -44,9 +49,10 @@ internal class IgnoreList
     public IgnoreState GetState(string filePath)
     {
         var relativePath = Path.GetRelativePath(this._basePath, filePath).Replace(Path.DirectorySeparatorChar, '/');
+        var negatives = GetNegatives(this._parser);
         return
             this._parser.Denies(relativePath) ? IgnoreState.Denied :
-            this._parser.Accepts(relativePath) ? IgnoreState.Accepted :
+            negatives.Merged.IsMatch("/" + relativePath.TrimStart('/')) ? IgnoreState.Accepted :
             IgnoreState.None;
     }
 }

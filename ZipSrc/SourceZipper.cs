@@ -101,8 +101,10 @@ internal class SourceZipper
         foreach (var filePath in files)
         {
             if (filePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) continue;
-            if (IsIgnored(ignoreLists, filePath)) continue;
-            if (new FileInfo(filePath).Attributes.HasFlag(FileAttributes.Hidden)) continue;
+
+            var ignireState = GetState(ignoreLists, filePath);
+            if (ignireState == IgnoreState.Denied) continue;
+            if (ignireState != IgnoreState.Accepted && new FileInfo(filePath).Attributes.HasFlag(FileAttributes.Hidden)) continue;
 
             var entryName = Path.GetRelativePath(context.TargetDir, filePath);
             context.Archive.CreateEntryFromFile(filePath, entryName, context.CompressionLevel);
@@ -132,15 +134,14 @@ internal class SourceZipper
     /// </summary>
     /// <param name="ignoreLists">A stack of <see cref="IgnoreList"/> instances to evaluate against the file path. Each list may specify rules for accepting or denying file paths.</param>
     /// <param name="filePath">The file path to check for denial against the ignore lists.</param>
-    /// <returns>true if any ignore list explicitly denies the file path; otherwise, false.</returns>
-    private static bool IsIgnored(Stack<IgnoreList> ignoreLists, string filePath)
+    /// <returns>An <see cref="IgnoreState"/> value indicating whether the file path is denied, accepted, or has no explicit state according to the ignore lists.</returns>
+    private static IgnoreState GetState(Stack<IgnoreList> ignoreLists, string filePath)
     {
         foreach (var ignore in ignoreLists)
         {
             var state = ignore.GetState(filePath);
-            if (state == IgnoreState.Denied) return true;
-            if (state == IgnoreState.Accepted) return false;
+            if (state != IgnoreState.None) return state;
         }
-        return false;
+        return IgnoreState.None;
     }
 }
