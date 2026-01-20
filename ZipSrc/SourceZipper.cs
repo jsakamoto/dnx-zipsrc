@@ -109,6 +109,8 @@ internal class SourceZipper
         var subdirs = Directory.GetDirectories(folderPath, "*", SearchOption.TopDirectoryOnly);
         foreach (var subdir in subdirs)
         {
+            if (new DirectoryInfo(subdir).Attributes.HasFlag(FileAttributes.Hidden)) continue;
+
             var gitIgnorePath = Path.Combine(subdir, ".gitignore");
             if (File.Exists(gitIgnorePath))
             {

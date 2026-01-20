@@ -4,3 +4,4 @@
 | Solution File | .slnx       | .sln           | (none)     |
 | Package       | Package Ref | package.config | npm        |
 | .gitignore    | (none)      | in subdir      | in root    |
+| .git (hidden) | in root     | in subdir      | in root    |

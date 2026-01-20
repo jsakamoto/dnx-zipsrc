@@ -11,6 +11,13 @@ internal class WorkSpace : IDisposable
         this._caseDir = caseDir;
         var testProjDir = FileIO.FindContainerDirToAncestor("*.csproj");
         this._workDirectory = WorkDirectory.CreateCopyFrom(Path.Combine(testProjDir, "Fixtures"), _ => true);
+
+        foreach (var srcGitDir in Directory.GetDirectories(this._workDirectory, "git", SearchOption.AllDirectories))
+        {
+            var targetGitDir = Path.Combine(Path.GetDirectoryName(srcGitDir) ?? ".", ".git");
+            Directory.Move(srcGitDir, targetGitDir);
+            new DirectoryInfo(targetGitDir).Attributes |= FileAttributes.Hidden;
+        }
     }
 
     public static WorkSpace Create(string caseDir) => new WorkSpace(caseDir);
