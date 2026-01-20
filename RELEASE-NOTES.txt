@@ -1,2 +1,6 @@
+v.2.0.0
+- Exclude hidden files and directories by default. (like .git, .svn, etc.)
+- Improved performance when scanning large directories.
+
 v.1.0.0
 - Initial release.
