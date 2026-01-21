@@ -1,3 +1,7 @@
+v.3.0.0
+- Breaking change: Hidden files/folders exclusion now applies only on Windows (via Hidden attribute).
+- Add default exclusions for version control directories (.git/, .svn/, .hg/) and *.zip files on all platforms.
+
 v.2.0.0
 - Exclude hidden files and directories by default. (like .git, .svn, etc.)
 - Improved performance when scanning large directories.
