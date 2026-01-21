@@ -18,8 +18,8 @@ dnx zipsrc [options]
 
 Option                          | Description
 ------------------------------- | -----------
-`-d`, `--directory <directory>` | Specifies the target directory path to create a zip archive. Default is the current directory.
-`-n`, `--name <file>`           | Specifies the output zip file path. If not specified, the default name is determined automatically. For more details, see the following document.
+`-d`, `--directory <directory>` | Specifies the target directory to archive. Default is the current directory.
+`-n`, `--name <file>`           | Specifies the output zip file path. If not specified, the default name is determined automatically. See [Output file naming](#output-file-naming) for details.
 
 
 ## What gets zipped
@@ -31,13 +31,13 @@ Option                          | Description
 
 The following files and folders are always excluded by default:
 
-- `.git/`, `.svn/`, `.hg/` (version control directories)
-- `*.zip` files
+- Version control directories: `.git/`, `.svn/`, `.hg/`
+- Zip archives: `*.zip`
 
 Additionally, on Windows, files and folders with the **Hidden** attribute are excluded by default.
 
-> [!Note]
-> You can explicitly include any of these default-excluded items by specifying them in your `.gitignore` file using negation patterns (e.g., `!.git/`).
+> [!NOTE]
+> You can explicitly include any of these default-excluded items by using negation patterns in your `.gitignore` file (e.g., `!.git/`).
 
 ## How ignore rules are applied
 
