@@ -26,7 +26,18 @@ Option                          | Description
 
 - Recursively scans the specified directory (including subdirectories) and collects files to zip.
 - Focuses on source code and other development-relevant files. Typical non-source artifacts are excluded (e.g., `bin/`, `obj/` for .NET projects, `node_modules/` for Node.js, and other build outputs, caches, or downloaded dependencies).
-- `.zip` files are always excluded from the archive.
+
+### Default exclusions
+
+The following files and folders are always excluded by default:
+
+- `.git/`, `.svn/`, `.hg/` (version control directories)
+- `*.zip` files
+
+Additionally, on Windows, files and folders with the **Hidden** attribute are excluded by default.
+
+> [!Note]
+> You can explicitly include any of these default-excluded items by specifying them in your `.gitignore` file using negation patterns (e.g., `!.git/`).
 
 ## How ignore rules are applied
 
