@@ -119,6 +119,11 @@ internal class SourceZipper
         var gitIgnoreExists = File.Exists(gitIgnorePath);
         if (gitIgnoreExists) ignoreLists = ignoreLists.Prepend(IgnoreList.Create(folderPath, gitIgnorePath));
 
+        // Check for .git/info/exclude in the current folder and add it to the ignore lists
+        // This is added after .gitignore so it can override .gitignore rules
+        var gitInfoExcludePath = Path.Combine(folderPath, ".git", "info", "exclude");
+        if (File.Exists(gitInfoExcludePath)) ignoreLists = ignoreLists.Prepend(IgnoreList.Create(folderPath, gitInfoExcludePath));
+
         // Add files in the current folder
         var files = Directory.GetFiles(folderPath, "*", SearchOption.TopDirectoryOnly);
         foreach (var filePath in files)
