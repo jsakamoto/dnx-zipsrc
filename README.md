@@ -45,6 +45,8 @@ Additionally, on Windows, files and folders with the **Hidden** attribute are ex
   - If the target directory contains a `.gitignore`, its rules are honored.
   - If there is no `.gitignore` at the target directory, the tool falls back to the default rules equivalent to those from `dotnet new gitignore`.
   - `.gitignore` files in subdirectories are also read and respected. Negation patterns (e.g., `!pattern`) are correctly handled.
+- `.git/info/exclude` files are also supported.
+  - If a `.git/info/exclude` file exists in a directory, its rules are applied after `.gitignore`, allowing them to override `.gitignore` patterns.
 
 ## Output file naming
 
