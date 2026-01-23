@@ -1,3 +1,8 @@
+v.3.1.0
+- Add support for .git/info/exclude files as an additional ignore source.
+- Add console output to display file names being processed.
+- Add --help, --version, and --loglevel options to the CLI.
+
 v.3.0.0
 - Breaking change: Hidden files/folders exclusion now applies only on Windows (via Hidden attribute).
 - Add default exclusions for version control directories (.git/, .svn/, .hg/) and *.zip files on all platforms.

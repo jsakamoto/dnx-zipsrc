@@ -16,10 +16,13 @@
 dnx zipsrc [options]
 ```
 
-Option                          | Description
-------------------------------- | -----------
-`-d`, `--directory <directory>` | Specifies the target directory to archive. Default is the current directory.
-`-n`, `--name <file>`           | Specifies the output zip file path. If not specified, the default name is determined automatically. See [Output file naming](#output-file-naming) for details.
+Option                                      | Description
+------------------------------------------- | -----------
+`-d`, `--directory <directory>`             | Specifies the target directory to archive. Default is the current directory.
+`-n`, `--name <file>`                       | Specifies the output zip file path. If not specified, the default name is determined automatically. See [Output file naming](#output-file-naming) for details.
+`-l`, `--loglevel {detailed|normal|quiet}` | Specifies the log level for console output. Default is `normal`.
+`-v`, `--version`                           | Displays the version number of the tool.
+`-h`, `--help`                              | Displays usage information and available options.
 
 
 ## What gets zipped
