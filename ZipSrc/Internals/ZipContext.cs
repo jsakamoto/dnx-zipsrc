@@ -21,4 +21,6 @@ internal class ZipContext
     /// Gets the target directory path for the zip operation.
     /// </summary>
     public required string TargetDir { get; init; }
+
+    public Action<LogLevel, string>? OutputLog { get; init; }
 }
